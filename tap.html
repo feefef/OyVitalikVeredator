@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.7.0/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            text-align: center;
+        }
+        
+        .button {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        #counter {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="button" id="redButton">Нажми меня</button>
+        <div id="counter">Нажатий: 0</div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const webapp = window.Telegram.WebApp;
+        webapp.ready();
+        
+        // Установка темы
+        document.body.style.backgroundColor = webapp.colorScheme === 'dark' ? '#1f1f1f' : '#f5f5f5';
+        
+        // Счетчик нажатий
+        let clickCount = 0;
+        const button = document.getElementById('redButton');
+        const counter = document.getElementById('counter');
+        
+        button.addEventListener('click', function() {
+            clickCount++;
+            counter.textContent = `Нажатий: ${clickCount}`;
+            
+            // Отправка данных в основное приложение Telegram
+            webapp.sendData(JSON.stringify({action: 'button_click', count: clickCount}));
+            
+            // Вибрация при нажатии (если поддерживается)
+            if (webapp.isVersionAtLeast('6.1') && webapp.hapticFeedback) {
+                webapp.hapticFeedback.impactOccurred('medium');
+            }
+        });
+    </script>
+</body>
+</html>
