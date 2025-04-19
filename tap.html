@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini App</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.7.0/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/1.0.0/telegram-web-app.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,66 +13,196 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f5f5f5;
+            background-color: #1a1a1a;
         }
         
         .container {
             text-align: center;
         }
         
-        .button {
-            background-color: #ff0000;
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 24px;
-            border-radius: 12px;
+        .clickable-image {
+            width: 200px;
+            height: 200px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8));
         }
         
-        .button:active {
+        .clickable-image:active {
             transform: scale(0.95);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .clickable-image.active {
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
         }
         
         #counter {
             margin-top: 20px;
-            font-size: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1; /* Changed to appear behind content */
+        }
+
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            animation: explode 1s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(30);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <button class="button" id="redButton">Нажми меня</button>
-        <div id="counter">Нажатий: 0</div>
+        <img src="vitalik.png" class="clickable-image" id="vitalikImage" alt="Vitalik">
+        <div id="counter">0 VITALIK</div>
     </div>
+    <div class="fireworks-container" id="fireworksContainer"></div>
 
     <script>
-        // Инициализация Telegram WebApp
-        const webapp = window.Telegram.WebApp;
-        webapp.ready();
-        
-        // Установка темы
-        document.body.style.backgroundColor = webapp.colorScheme === 'dark' ? '#1f1f1f' : '#f5f5f5';
-        
-        // Счетчик нажатий
-        let clickCount = 0;
-        const button = document.getElementById('redButton');
-        const counter = document.getElementById('counter');
-        
-        button.addEventListener('click', function() {
-            clickCount++;
-            counter.textContent = `Нажатий: ${clickCount}`;
-            
-            // Отправка данных в основное приложение Telegram
-            webapp.sendData(JSON.stringify({action: 'button_click', count: clickCount}));
-            
-            // Вибрация при нажатии (если поддерживается)
-            if (webapp.isVersionAtLeast('6.1') && webapp.hapticFeedback) {
-                webapp.hapticFeedback.impactOccurred('medium');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Telegram WebApp
+            let tg;
+            try {
+                tg = window.Telegram?.WebApp || window.TelegramWebApp || {
+                    ready: () => console.log("ready called"),
+                    expand: () => console.log("expand called"),
+                    sendData: (data) => console.log("sendData called with:", data),
+                    colorScheme: 'light',
+                    isVersionAtLeast: () => false
+                };
+            } catch (e) {
+                console.error("Error initializing API:", e);
             }
+
+            // Initialization
+            try {
+                tg.expand();
+                tg.ready();
+            } catch (e) {
+                console.error("Error calling API methods:", e);
+            }
+            
+            // Set theme
+            document.body.style.backgroundColor = (tg.colorScheme === 'dark') ? '#1f1f1f' : '#1a1a1a';
+            if (tg.colorScheme === 'dark') {
+                document.getElementById('counter').style.color = '#ffffff';
+            }
+            
+            // Click counter and audio setup
+            let clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
+            const image = document.getElementById('vitalikImage');
+            const counter = document.getElementById('counter');
+            const fireworksContainer = document.getElementById('fireworksContainer');
+            let timeoutId;
+            
+            // Audio player setup
+            const audioFiles = ['1.mp3', '2.mp3', '3.mp3', '4.mp3', '5.mp3'];
+            let currentAudioIndex = 0;
+            let isPlaying = false;
+            
+            const audioElements = audioFiles.map(file => {
+                const audio = new Audio(file);
+                audio.addEventListener('ended', () => {
+                    if (isPlaying) {
+                        currentAudioIndex = (currentAudioIndex + 1) % audioFiles.length;
+                        audioElements[currentAudioIndex].play();
+                    }
+                });
+                return audio;
+            });
+
+            function createFirework(x, y) {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+                for (let i = 0; i < 8; i++) {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = x + 'px';
+                    firework.style.top = y + 'px';
+                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    fireworksContainer.appendChild(firework);
+
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 1000);
+                }
+            }
+
+            function startFireworks() {
+                if (!isPlaying) return;
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                createFirework(x, y);
+                if (isPlaying) {
+                    setTimeout(startFireworks, 300);
+                }
+            }
+
+            function startAudio() {
+                isPlaying = true;
+                image.src = 'vitalik.png';
+                if (!audioElements[currentAudioIndex].playing) {
+                    audioElements[currentAudioIndex].play();
+                } else {
+                    audioElements[currentAudioIndex].play();
+                }
+                startFireworks();
+            }
+
+            function stopAudio() {
+                isPlaying = false;
+                image.src = 'vitalik2.png';
+                audioElements.forEach(audio => {
+                    audio.pause(); // Only pause, don't reset
+                });
+                fireworksContainer.innerHTML = '';
+            }
+
+            counter.textContent = `${clickCount} VITALIK`;
+            
+            image.addEventListener('click', function() {
+                clickCount++;
+                counter.textContent = `${clickCount} VITALIK`;
+                localStorage.setItem('clickCount', clickCount);
+                
+                clearTimeout(timeoutId);
+                startAudio();
+                
+                timeoutId = setTimeout(() => {
+                    stopAudio();
+                }, 2000);
+
+                try {
+                    tg.sendData(JSON.stringify({action: 'vitalik_click', count: clickCount}));
+                    if (window.navigator?.vibrate) window.navigator.vibrate(50);
+                } catch (e) {
+                    console.error("Error sending data:", e);
+                }
+            });
         });
     </script>
 </body>
