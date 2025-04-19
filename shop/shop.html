@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shop - Telegram Mini App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/1.0.0/telegram-web-app.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .home-icon {
+            width: 50px;
+            height: 50px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .home-icon:active {
+            transform: scale(0.9);
+        }
+        
+        .categories {
+            margin-top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .category {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        .price {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        @media screen and (max-width: 480px) {
+            .home-icon {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .category {
+                font-size: 20px;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="vitalik.png" class="home-icon" onclick="window.location.href='tap.html'" alt="Home">
+    
+    <div class="categories">
+        <div class="category" onclick="showMessage()">
+            <span>Баобаб 🌳</span>
+            <span class="price">200 Vi</span>
+        </div>
+        <div class="category" onclick="showMessage()">
+            <span>BBQ 🍖</span>
+            <span class="price">400 Vi</span>
+        </div>
+        <div class="category" onclick="showMessage()">
+            <span>Шоколадний ковтан 🍫</span>
+            <span class="price">10K Vi</span>
+        </div>
+    </div>
+    
+    <div class="modal" id="messageModal">
+        <h2>Поки нема :(</h2>
+        <p>Прийдіть потім</p>
+        <button onclick="hideMessage()" style="padding: 10px 20px; margin-top: 10px; border: none; border-radius: 6px; background: #555; color: white; cursor: pointer;">OK</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        function showMessage() {
+            document.getElementById('messageModal').style.display = 'block';
+        }
+
+        function hideMessage() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
