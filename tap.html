@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telegram Mini App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/1.0.0/telegram-web-app.min.js"></script>
     <style>
@@ -14,6 +14,7 @@
             height: 100vh;
             margin: 0;
             background-color: #1a1a1a;
+            touch-action: none;
         }
         
         .container {
@@ -36,7 +37,13 @@
         }
 
         .clickable-image.active {
-            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+            filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.9));
+            animation: dance 0.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes dance {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
         }
         
         #counter {
@@ -74,12 +81,47 @@
                 opacity: 0;
             }
         }
+
+        .shop-icon {
+            width: 50px;
+            height: 50px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .shop-icon:active {
+            transform: scale(0.9);
+        }
+        
+        /* Media queries for small screens */
+        @media screen and (max-width: 480px) {
+            .clickable-image {
+                width: 280px;
+                height: 280px;
+            }
+            
+            #counter {
+                font-size: 32px;
+                margin-top: 30px;
+            }
+
+            .shop-icon {
+                width: 70px;
+                height: 70px;
+                bottom: 30px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <img src="vitalik.png" class="clickable-image" id="vitalikImage" alt="Vitalik">
         <div id="counter">0 VITALIK</div>
+        <img src="shop.png" class="shop-icon" id="shopIcon" alt="Shop" onclick="window.location.href='shop.html'">
     </div>
     <div class="fireworks-container" id="fireworksContainer"></div>
 
@@ -136,9 +178,16 @@
                 return audio;
             });
 
+            // Add fireworks limit
+            const MAX_FIREWORKS = 15;
+            let activeFireworks = 0;
+
             function createFirework(x, y) {
+                if (activeFireworks >= MAX_FIREWORKS) return;
+                
                 const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < 8 && activeFireworks < MAX_FIREWORKS; i++) {
+                    activeFireworks++;
                     const firework = document.createElement('div');
                     firework.className = 'firework';
                     firework.style.left = x + 'px';
@@ -148,15 +197,18 @@
 
                     setTimeout(() => {
                         firework.remove();
+                        activeFireworks--;
                     }, 1000);
                 }
             }
 
             function startFireworks() {
                 if (!isPlaying) return;
-                const x = Math.random() * window.innerWidth;
-                const y = Math.random() * window.innerHeight;
-                createFirework(x, y);
+                if (activeFireworks < MAX_FIREWORKS) {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    createFirework(x, y);
+                }
                 if (isPlaying) {
                     setTimeout(startFireworks, 300);
                 }
@@ -165,6 +217,7 @@
             function startAudio() {
                 isPlaying = true;
                 image.src = 'vitalik.png';
+                image.classList.add('active');
                 if (!audioElements[currentAudioIndex].playing) {
                     audioElements[currentAudioIndex].play();
                 } else {
@@ -176,6 +229,7 @@
             function stopAudio() {
                 isPlaying = false;
                 image.src = 'vitalik2.png';
+                image.classList.remove('active');
                 audioElements.forEach(audio => {
                     audio.pause(); // Only pause, don't reset
                 });
